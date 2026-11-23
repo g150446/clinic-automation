@@ -1,0 +1,13 @@
+# クリニック固有情報（認証情報・受信メール・患者関連データ）
+info.txt
+mail/
+*.eml
+*.pdf
+.env
+.env.*
+
+# OS / Python
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
