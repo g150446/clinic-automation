@@ -1,17 +1,34 @@
-# クリニック固有情報（認証情報・受信メール・患者関連データ）
+# ===== 認証情報（公開しない） =====
 info.txt
+.env
+.env.*
+!.env.example
+*.plist
+!*.plist.example
+
+# ===== 患者情報を含みうるデータ（公開しない） =====
+# 受信メール・添付 PDF（fetch_lolipop_mail.py の保存先）
 mail/
 *.eml
 *.pdf
-.env
-.env.*
+# FAX 監視の保存先（PDF・文字起こし Markdown・状態ファイル・ログ）
+fax/
+state.json
+*.log
+# 文字起こし結果を手元に保存した Markdown（README 以外）
+*.md
+!README.md
+# 表・画像として書き出したもの
+*.csv
+*.xlsx
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
 
-# OS / Python
+# ===== OS / Python =====
 .DS_Store
 __pycache__/
 *.pyc
 .venv/
-!.env.example
-# FAX 監視の保存先（PDF・文字起こし・状態ファイル）とログ
-fax/
-*.log
