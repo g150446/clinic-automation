@@ -30,37 +30,11 @@ HTTP_ERROR_HINTS = {
 }
 
 
-def transcribe(pdf_path, model, api_key):
-    try:
-        pdf_bytes = pdf_path.read_bytes()
-    except OSError as exc:
-        raise ValueError(f"PDFを読み込めません（{pdf_path}）。") from exc
-    if b"%PDF-" not in pdf_bytes[:1024]:
-        raise ValueError(f"PDFヘッダーが見つかりません（{pdf_path}）。")
-
-    encoded_pdf = base64.b64encode(pdf_bytes).decode("ascii")
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": TRANSCRIPTION_PROMPT},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "添付PDFを全文文字起こししてください。"},
-                    {
-                        "type": "file",
-                        "file": {
-                            "filename": pdf_path.name,
-                            "file_data": f"data:application/pdf;base64,{encoded_pdf}",
-                        },
-                    },
-                ],
-            },
-        ],
-    }
+def chat(messages, model, api_key, timeout=180):
+    """OpenRouterのチャット補完を呼び、応答本文を返す。"""
     request = Request(
         OPENROUTER_URL,
-        data=json.dumps(payload).encode("utf-8"),
+        data=json.dumps({"model": model, "messages": messages}).encode("utf-8"),
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
@@ -69,7 +43,7 @@ def transcribe(pdf_path, model, api_key):
     )
 
     try:
-        with urlopen(request, timeout=180) as response:
+        with urlopen(request, timeout=timeout) as response:
             result = json.load(response)
     except HTTPError as exc:
         exc.close()
@@ -87,14 +61,42 @@ def transcribe(pdf_path, model, api_key):
         finish_reason = choice["finish_reason"]
         content = choice["message"]["content"]
     except (IndexError, KeyError, TypeError) as exc:
-        raise ValueError("OpenRouterの応答に文字起こし結果がありません。") from exc
+        raise ValueError("OpenRouterの応答に出力がありません。") from exc
     if finish_reason == "length":
-        raise ValueError("出力上限に達し、文字起こしが途中で終了しました。")
+        raise ValueError("出力上限に達し、出力が途中で終了しました。")
     if finish_reason != "stop" or choice.get("error"):
-        raise ValueError("文字起こしが正常に終了しませんでした。")
+        raise ValueError("出力が正常に終了しませんでした。")
     if not isinstance(content, str) or not content.strip():
-        raise ValueError("文字起こし結果が空です。")
+        raise ValueError("出力が空です。")
     return content
+
+
+def transcribe(pdf_path, model, api_key):
+    try:
+        pdf_bytes = pdf_path.read_bytes()
+    except OSError as exc:
+        raise ValueError(f"PDFを読み込めません（{pdf_path}）。") from exc
+    if b"%PDF-" not in pdf_bytes[:1024]:
+        raise ValueError(f"PDFヘッダーが見つかりません（{pdf_path}）。")
+
+    encoded_pdf = base64.b64encode(pdf_bytes).decode("ascii")
+    messages = [
+        {"role": "system", "content": TRANSCRIPTION_PROMPT},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "添付PDFを全文文字起こししてください。"},
+                {
+                    "type": "file",
+                    "file": {
+                        "filename": pdf_path.name,
+                        "file_data": f"data:application/pdf;base64,{encoded_pdf}",
+                    },
+                },
+            ],
+        },
+    ]
+    return chat(messages, model, api_key)
 
 
 def main():

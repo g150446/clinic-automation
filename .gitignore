@@ -11,3 +11,7 @@ mail/
 __pycache__/
 *.pyc
 .venv/
+!.env.example
+# FAX 監視の保存先（PDF・文字起こし・状態ファイル）とログ
+fax/
+*.log
