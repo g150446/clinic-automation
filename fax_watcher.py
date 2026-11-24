@@ -163,7 +163,7 @@ def process_fax(uid_key, received, pdfs, out_dir, args, config):
         page_note = f"・{pages}ページ" if pages else ""
         shown = md_path.relative_to(BASE_DIR) if md_path.is_relative_to(BASE_DIR) else md_path
         posts.append(
-            f":fax: *新着FAX*（{received:%-m/%-d %H:%M} 受信{page_note}）\n"
+            f":fax: *新着FAX* （{received:%-m/%-d %H:%M} 受信{page_note}）\n"
             f"{summary}\n"
             f"_文字起こし: `{shown}`_"
         )
